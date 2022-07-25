@@ -20,7 +20,6 @@ struct Adresat
 };
 
 
-
 string wczytajLinie()
 {
     string wejscie = "";
@@ -36,7 +35,7 @@ char wczytajZnak()
     while (true)
     {
         getline(cin, wejscie);
-        if ((wejscie[0] >= '1') && (wejscie[0] <='6') ||(wejscie[0]=='9'))
+        if ( (wejscie[0]=='9') || (wejscie[0] >= '1') && (wejscie[0] <='6'))
         {
             znak=wejscie[0];
             break;
@@ -54,6 +53,23 @@ char wczytajZnak2()
     {
         getline(cin, wejscie);
         if ((wejscie[0] >= '1') && (wejscie[0] <='5'))
+        {
+            znak=wejscie[0];
+            break;
+        }
+        cout << "Ta opcja jest nieobslugiwana. Wpisz ponownie cyfre." << endl;
+    }
+    return znak;
+}
+
+char wczytajZnak3()
+{
+    string wejscie = "";
+    char znak = {0};
+    while (true)
+    {
+        getline(cin, wejscie);
+        if ((wejscie[0] >= '1') && (wejscie[0] <='3') || (wejscie[0]=='9') )
         {
             znak=wejscie[0];
             break;
@@ -90,13 +106,15 @@ string konwersjaIntNaString (int liczba)
 
 void odczytywanieDanychZPliku(vector <Adresat> & adresaci)
 {
+
     int najwyzszyNumerID = 0;
     int j = 0;
     PLIK.open("Ksiazka Adresowa.txt",ios::in);
     if (!PLIK.good())
     {
-        cout << "Nie odnaleziono bazy danych." << endl;
-        return;
+        cout << "Nie odnaleziono bazy danych. Tworzenie nowego pliku" << endl;
+        PLIK.open("Ksiazka Adresowa.txt",ios::out);
+        PLIK.close();
     }
     string odczytaneLinieZPliku;
     int dlugosc = 0;
@@ -175,28 +193,49 @@ void wyswietlWszystkieKontakty(vector <Adresat> & adresaci)
 
 void dodajAdresata(vector <Adresat> & adresaci)
 {
-    int najwyzszyNumerID = adresaci.back().id;
-    int wielkoscWektora = adresaci.size();
-    adresaci.push_back(Adresat());
-    najwyzszyNumerID++;
-    string tymczasowyString ="";
-    adresaci[wielkoscWektora].id = najwyzszyNumerID;
-    cout << "Podaj imie nowego kontaktu:";
-    cin >> tymczasowyString;
-    adresaci[wielkoscWektora].imie = tymczasowyString;
-    cout << "Podaj nazwisko nowego kontaktu:";
-    cin >> tymczasowyString;
-    adresaci[wielkoscWektora].nazwisko = tymczasowyString;
-    cout << "Podaj numer telefonu nowego kontaktu:";
-    tymczasowyString = wczytajLinie();
-    adresaci[wielkoscWektora].numerTelefonu = tymczasowyString;
-    cout << "Podaj email nowego kontaktu:";
-    tymczasowyString = wczytajLinie();
-    adresaci[wielkoscWektora].email = tymczasowyString;
-    cout << "Podaj adres nowego kontaktu:";
-    tymczasowyString = wczytajLinie();
-    adresaci[wielkoscWektora].adres = tymczasowyString;
+    PLIK.open("Ksiazka Adresowa.txt",ios::in);
+    int najwyzszyNumerID;
+    string sprawdzenie;
+    getline (PLIK, sprawdzenie);
+    int dlugosc = sprawdzenie.length();
+    int wielkoscWektora;
+    if  (dlugosc == 0)
+    {
+       wielkoscWektora = 0;
+    }
+    else
+    {
+        wielkoscWektora = adresaci.size();
+    }
+    if (wielkoscWektora != 0)
+    {
+        najwyzszyNumerID = adresaci.back().id;
+    }
+    else
+    {
+        najwyzszyNumerID = 0;
+    }
+    PLIK.close();
 
+            adresaci.push_back(Adresat());
+            najwyzszyNumerID++;
+            string tymczasowyString ="";
+            adresaci[wielkoscWektora].id = najwyzszyNumerID;
+            cout << "Podaj imie nowego kontaktu:";
+            cin >> tymczasowyString;
+            adresaci[wielkoscWektora].imie = tymczasowyString;
+            cout << "Podaj nazwisko nowego kontaktu:";
+            cin >> tymczasowyString;
+            adresaci[wielkoscWektora].nazwisko = tymczasowyString;
+            cout << "Podaj numer telefonu nowego kontaktu:";
+            tymczasowyString = wczytajLinie();
+            adresaci[wielkoscWektora].numerTelefonu = tymczasowyString;
+            cout << "Podaj email nowego kontaktu:";
+            tymczasowyString = wczytajLinie();
+            adresaci[wielkoscWektora].email = tymczasowyString;
+            cout << "Podaj adres nowego kontaktu:";
+            tymczasowyString = wczytajLinie();
+            adresaci[wielkoscWektora].adres = tymczasowyString;
 }
 
 void zapisDoPliku (vector <Adresat> & adresaci)
@@ -242,7 +281,7 @@ void wyszukajAdresataPoNazwisku(vector <Adresat> & adresaci)
     string nazwiskoDoWyszukania = "";
     cout << "Podaj nazwisko do wyszukania" << endl;
     cin >> nazwiskoDoWyszukania;
-    cout << "Wyświetlam wyniki wyszukiwania nazwiska: " << nazwiskoDoWyszukania << endl;
+    cout << "Wyswietlam wyniki wyszukiwania nazwiska: " << nazwiskoDoWyszukania << endl;
     bool czyZnalezionoPrzynajmniejJednoImie = 0;
     for(int i=0; i<adresaci.size(); i++)
     {
@@ -278,32 +317,30 @@ void usunAdresata (vector <Adresat> & adresaci)
             break;
         }
         cout << "Nie ma uzytkownika z takim numerem. Wpisz ponownie." << endl;
-        return najwyzszyNumerID;            //<-
+        break;
     }
-    if (idDoUsunieciaInt==najwyzszyNumerID)
-    {
-        najwyzszyNumerID = najwyzszyNumerID-1;
-    }
+   // if (idDoUsunieciaInt == najwyzszyNumerID)
+   // {
+   //     najwyzszyNumerID = najwyzszyNumerID-1;
+   // }
     for(int i=0; i<=adresaci.size(); i++)
     {
         tymczasowyID = adresaci[i].id;
         if (tymczasowyID == idDoUsunieciaInt)
         {
             adresaci.erase(adresaci.begin()+tymczasowyID-1);
-
         }
     }
-    cout << "Adresat usuniety" << endl;
-
-
+    cout << "Powracam do Menu Glownego" << endl;
 }
 
 
-void edytujAdresata(vector <Adresat> & adresaci)
+void edytujAdresata (vector <Adresat> & adresaci)
 {
-    int najwyzszyNumerID = najwyzszyNumerID = adresaci.back().id;
+    int najwyzszyNumerID = adresaci.back().id;
     int tymczasowyID = 0;
     int idDoZmianyInt = 0;
+
     int wybor = 0;
     string idDoZmiany = "";
     string tymczasowyString ="";
@@ -318,12 +355,12 @@ void edytujAdresata(vector <Adresat> & adresaci)
         }
         cout << "Nie ma uzytkownika z takim numerem. Wpisz ponownie." << endl;
     }
-    for(int i=0; i<=adresaci.size(); i++)
-    {
-        tymczasowyID = adresaci[i].id;
+    for(int i=0; i<=adresaci.size(); i++)    {
+        int tymczasowyID = adresaci[i].id;
+
         if (tymczasowyID == idDoZmianyInt)
         {
-            cout << "Podaj co chcesz edytować. Wybierz liczbe" << endl;
+            cout << "Podaj co chcesz edytowac. Wybierz liczbe" << endl;
             cout << "1. Imie" << endl;
             cout << "2. Nazwisko" << endl;
             cout << "3. Numer telefonu" << endl;
@@ -333,27 +370,27 @@ void edytujAdresata(vector <Adresat> & adresaci)
 
             switch(wybor)
             {
-            case 1:
+            case '1':
                 cout << "Podaj nowe imie kontaktu:";
                 cin >> tymczasowyString;
                 adresaci[i].imie = tymczasowyString;
                 break;
-            case 2:
+            case '2':
                 cout << "Podaj nowe nazwisko kontaktu:";
                 cin >> tymczasowyString;
                 adresaci[i].nazwisko = tymczasowyString;
                 break;
-            case 3:
+            case '3':
                 cout << "Podaj nowy numer telefonu kontaktu:";
                 tymczasowyString = wczytajLinie();
                 adresaci[i].numerTelefonu = tymczasowyString;
                 break;
-            case 4:
+            case '4':
                 cout << "Podaj nowy email kontaktu:";
                 tymczasowyString = wczytajLinie();
                 adresaci[i].email = tymczasowyString;
                 break;
-            case 5:
+            case '5':
                 cout << "Podaj nowy adres kontaktu:";
                 tymczasowyString = wczytajLinie();
                 adresaci[i].adres = tymczasowyString;
@@ -362,6 +399,8 @@ void edytujAdresata(vector <Adresat> & adresaci)
             cout << "Dane adresata zostaly zmienione" << endl << endl;
 
         }
+
+
     }
 }
 
@@ -374,48 +413,76 @@ int main()
     char wybor;
     while (1)
     {
-        system("cls");
-        cout << "Menu glowne." << endl;
+        //system("cls");
+        cout << "Menu glowne logowania." << endl;
         cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<<endl;
-        cout << "1. Rejestracja nowej osoby." << endl;
-        cout << "2. Wyszukiwanie po imieniu." << endl;
-        cout << "3. Wyszukiwanie po nazwisku." << endl;
-        cout << "4. Wyswietl wszystkie kontakty." << endl;
-        cout << "5. Usun kontakt." << endl;
-        cout << "6. Edytuj kontakt." << endl;
-        cout << "9. Zamknij program." << endl;
-        cout << "Wybierz liczbe: " << endl;
-        wybor = wczytajZnak();
-        switch(wybor)
+        cout << "1. Rejestracja." << endl;
+        cout << "2. Logowanie." << endl;
+        cout << "9. Koniec programu." << endl;
+        wybor = wczytajZnak3();
+        switch (wybor)
         {
         case '1':
-            dodajAdresata(adresaci);
-            zapisDoPliku(adresaci);
-            system("pause");
+            //logowanie;
+
             break;
         case '2':
-            wyszukajAdresataPoImieniu(adresaci);
-            system("pause");
-            break;
-        case '3':
-            wyszukajAdresataPoNazwisku(adresaci);
-            system("pause");
-            break;
-        case '4':
-            wyswietlWszystkieKontakty(adresaci);
-            system("pause");
-            break;
-        case '5':
-            usunAdresata(adresaci);
-            zapisDoPliku(adresaci);
-            adresaci.clear();
-            odczytywanieDanychZPliku(adresaci);
-            system("pause");
-            break;
-        case '6':
-            edytujAdresata(adresaci);
-            zapisDoPliku(adresaci);
-            system("pause");
+            while (1)
+            {
+                //system("cls");
+                cout << "Menu glowne." << endl;
+                cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<<endl;
+                cout << "1. Rejestracja nowej osoby." << endl;
+                cout << "2. Wyszukiwanie po imieniu." << endl;
+                cout << "3. Wyszukiwanie po nazwisku." << endl;
+                cout << "4. Wyswietl wszystkie kontakty." << endl;
+                cout << "5. Usun kontakt." << endl;
+                cout << "6. Edytuj kontakt." << endl;
+                cout << "9. Wyloguj." << endl;
+                cout << "Wybierz liczbe: " << endl;
+                wybor = wczytajZnak();
+                switch(wybor)
+                {
+                case '1':
+                    dodajAdresata(adresaci);
+
+                    zapisDoPliku(adresaci);
+                    system("pause");
+                    break;
+                case '2':
+                    wyszukajAdresataPoImieniu(adresaci);
+                    system("pause");
+                    break;
+                case '3':
+                    wyszukajAdresataPoNazwisku(adresaci);
+                    system("pause");
+                    break;
+                case '4':
+                    wyswietlWszystkieKontakty(adresaci);
+                    system("pause");
+                    break;
+                case '5':
+                    usunAdresata(adresaci);
+                    zapisDoPliku(adresaci);
+                    adresaci.clear();
+                    odczytywanieDanychZPliku(adresaci);
+                    system("pause");
+                    break;
+                case '6':
+                    edytujAdresata(adresaci);
+                    zapisDoPliku(adresaci);
+                    system("pause");
+                    break;
+                case '9':
+                    cout<<"Wylogowano" << endl;
+                    break;
+                }
+                if (wybor == '9')
+                {
+                  break;
+                }
+
+            }
             break;
         case '9':
             cout<<"Zamykanie programu." << endl;
