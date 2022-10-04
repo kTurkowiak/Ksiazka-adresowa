@@ -33,6 +33,7 @@ void zapisDoPlikuUzytkownicy (vector <Uzytkownik> & uzytkownicy);
 void odczytanieUzytkownikow (vector <Uzytkownik> & uzytkownicy);
 void zapisDoPliku (vector <Adresat> & adresaci, int numerUzytkownika);
 void dodajAdresata(vector <Adresat> & adresaci);
+string wczytajLinie();
 void wyszukajAdresataPoNazwisku(vector <Adresat> & adresaci);
 void wyszukajAdresataPoImieniu (vector <Adresat> & adresaci);
 void wyswietlWszystkieKontakty(vector <Adresat> & adresaci);
@@ -233,9 +234,10 @@ void odczytanieUzytkownikow(vector <Uzytkownik> & uzytkownicy)
 void menuGlowne (vector <Uzytkownik> & uzytkownicy, int numerUzytkownika)
 {
     vector <Adresat> adresaci;
+    odczytywanieDanychZPliku(adresaci, numerUzytkownika);
+
     while (1)
     {
-        odczytywanieDanychZPliku(adresaci, numerUzytkownika);
         //system("cls");
         cout << "Menu glowne." << endl;
         cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<<endl;
@@ -267,11 +269,11 @@ void menuGlowne (vector <Uzytkownik> & uzytkownicy, int numerUzytkownika)
             break;
         case '4':
             wyswietlWszystkieKontakty(adresaci);
-            system("pause");
+             system("pause");
             break;
 
         case '5':
-            usunAdresata(adresaci);                                         //coú dziwnego dodaje po zapisie do Ksiazki Adresowej
+            usunAdresata(adresaci);                                         //co≈õ dziwnego dodaje po zapisie do Ksiazki Adresowej
             zapisDoPliku(adresaci,numerUzytkownika);
             system("pause");
             break;
@@ -307,10 +309,14 @@ char wczytajZnakZPodmenu()
             znak=wejscie[0];
             break;
         }
-        cout << "Ta opcja jest nieobslugiwana. Wpisz ponownie cyfre." << endl;
+        else if (wejscie.length() == 1)
+        {
+            cout << "Ta opcja jest nieobslugiwana. Wpisz ponownie cyfre." << endl;
+        }
     }
     return znak;
 }
+
 
 void odczytywanieDanychZPliku(vector <Adresat> & adresaci,int numerUzytkownika)
 {
@@ -437,22 +443,30 @@ void dodajAdresata(vector <Adresat> & adresaci)
     adresaci[wielkoscWektora].id = najwyzszyNumerID;
     string tymczasowyString ="";
     cout << "Podaj imie nowego kontaktu:";
-    cin >> tymczasowyString;
+    tymczasowyString = wczytajLinie();
     adresaci[wielkoscWektora].imie = tymczasowyString;
     cout << "Podaj nazwisko nowego kontaktu:";
-    cin >> tymczasowyString;
+    tymczasowyString = wczytajLinie();
     adresaci[wielkoscWektora].nazwisko = tymczasowyString;
     cout << "Podaj numer telefonu nowego kontaktu:";
-    cin >> tymczasowyString;
+    tymczasowyString = wczytajLinie();
     adresaci[wielkoscWektora].numerTelefonu = tymczasowyString;
     cout << "Podaj email nowego kontaktu:";
-    cin >> tymczasowyString;
+    tymczasowyString = wczytajLinie();
     adresaci[wielkoscWektora].email = tymczasowyString;
     cout << "Podaj adres nowego kontaktu:";
-    cin >> tymczasowyString;
+    tymczasowyString = wczytajLinie();
     adresaci[wielkoscWektora].adres = tymczasowyString;
-
 }
+
+string wczytajLinie()
+{
+    string wejscie = "";
+    cin.sync();
+    getline (cin, wejscie);
+    return wejscie;
+}
+
 
 void wyszukajAdresataPoImieniu (vector <Adresat> & adresaci)
 {
@@ -574,7 +588,7 @@ void edytujAdresata (vector <Adresat> & adresaci)
     char takLubNie;
     int komorkaAdresataDoEdycji;
     komorkaAdresataDoEdycji = sprawdzCzyIDIstnieje(adresaci);
-    string tymczasaowyString = "";
+    string tymczasowyString = "";
 
     while (1)
     {
@@ -600,28 +614,28 @@ void edytujAdresata (vector <Adresat> & adresaci)
             {
             case '1':
                 cout << "Wprowadz nowe imie:" << endl;
-                cin >> tymczasaowyString;
-                adresaci[komorkaAdresataDoEdycji].imie = tymczasaowyString;
+                tymczasowyString = wczytajLinie();
+                adresaci[komorkaAdresataDoEdycji].imie = tymczasowyString;
                 break;
             case '2':
                 cout << "Wprowadz nowe nazwisko:" << endl;
-                cin >> tymczasaowyString;
-                adresaci[komorkaAdresataDoEdycji].nazwisko = tymczasaowyString;
+                tymczasowyString = wczytajLinie();
+                adresaci[komorkaAdresataDoEdycji].nazwisko = tymczasowyString;
                 break;
             case '3':
                 cout << "Wprowadz nowy numer telefonu:" << endl;
-                cin >> tymczasaowyString;
-                adresaci[komorkaAdresataDoEdycji].numerTelefonu = tymczasaowyString;
+                tymczasowyString = wczytajLinie();
+                adresaci[komorkaAdresataDoEdycji].numerTelefonu = tymczasowyString;
                 break;
             case '4':
                 cout << "Wprowadz nowy email:" << endl;
-                cin >> tymczasaowyString;
-                adresaci[komorkaAdresataDoEdycji].email = tymczasaowyString;
+                tymczasowyString = wczytajLinie();
+                adresaci[komorkaAdresataDoEdycji].email = tymczasowyString;
                 break;
             case '5':
                 cout << "Wprowadz nowy adres:" << endl;
-                cin >> tymczasaowyString;
-                adresaci[komorkaAdresataDoEdycji].adres = tymczasaowyString;
+                tymczasowyString = wczytajLinie();
+                adresaci[komorkaAdresataDoEdycji].adres = tymczasowyString;
                 break;
             case '6':
                 break;
