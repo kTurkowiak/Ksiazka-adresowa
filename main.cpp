@@ -11,6 +11,7 @@
 using namespace std;
 fstream PLIKAdresaci;
 fstream PLIKUzytkownicy;
+fstream PLIKAdresacitymczasowy;
 
 struct Adresat
 {
@@ -31,13 +32,14 @@ void logowanie (vector <Uzytkownik> & uzytkownicy);
 void rejestracja (vector <Uzytkownik> & uzytkownicy);
 void zapisDoPlikuUzytkownicy (vector <Uzytkownik> & uzytkownicy);
 void odczytanieUzytkownikow (vector <Uzytkownik> & uzytkownicy);
-void zapisDoPliku (vector <Adresat> & adresaci, int numerUzytkownika);
+void zapisDoPliku (vector <Adresat> & adresaci,int numerUzytkownika, int IDDoUsuniecia);
 void dodajAdresata(vector <Adresat> & adresaci);
+int wyliczenieNajwyzszegoNumeruID (vector <Adresat> & adresaci);
 string wczytajLinie();
 void wyszukajAdresataPoNazwisku(vector <Adresat> & adresaci);
 void wyszukajAdresataPoImieniu (vector <Adresat> & adresaci);
 void wyswietlWszystkieKontakty(vector <Adresat> & adresaci);
-void usunAdresata (vector <Adresat> & adresaci);
+int usunAdresata (vector <Adresat> & adresaci);
 void menuGlowne (vector <Uzytkownik> & uzytkownicy,int numerUzytkownika);
 char wczytajZnakZPodmenu();
 int sprawdzCzyIDIstnieje(vector <Adresat> & adresaci);
@@ -104,14 +106,14 @@ void logowanie(vector <Uzytkownik> & uzytkownicy)
     cin >> tymczasoweHaslo;
     bool zalogowanie = 1;
     int vectorSize = uzytkownicy.size();
-    for (int i=0; i<vectorSize ;i++)
+    for (int i = 0; i<vectorSize ; i++)
     {
-         if ((uzytkownicy[i].login == tymczasowyLogin) && (uzytkownicy[i].haslo == tymczasoweHaslo))
+        if ((uzytkownicy[i].login == tymczasowyLogin) && (uzytkownicy[i].haslo == tymczasoweHaslo))
         {
             cout << "Udalo sie zalogowac" << endl;
             system ("pause");
-            zalogowanie = 1;
             menuGlowne(uzytkownicy,i);
+            zalogowanie = 1;
         }
         else
         {
@@ -120,15 +122,15 @@ void logowanie(vector <Uzytkownik> & uzytkownicy)
     }
     if (zalogowanie == 0)
     {
-       cout << "Nie udalo sie zalogowac" << endl;
-       system ("pause");
+        cout << "Nie udalo sie zalogowac" << endl;
+        system ("pause");
     }
 
 }
 
 void rejestracja (vector <Uzytkownik> & uzytkownicy)
 {
-        PLIKUzytkownicy.open("Uzytkownicy.txt",ios::in);
+    PLIKUzytkownicy.open("Uzytkownicy.txt",ios::in);
     if (!PLIKUzytkownicy.good())
     {
         cout << "Nie odnaleziono bazy uzytkownikow. Tworzenie nowego pliku" << endl;
@@ -153,14 +155,14 @@ void rejestracja (vector <Uzytkownik> & uzytkownicy)
     uzytkownicy[wielkoscWektoraUzytkownicy].haslo = tymczasowyString;
     PLIKUzytkownicy.close();
     zapisDoPlikuUzytkownicy(uzytkownicy);
-
+    cout << "Zarejestrowano uzytkownika" << endl;
+    system("pause");
 }
 
 void zapisDoPlikuUzytkownicy(vector <Uzytkownik> & uzytkownicy)
 {
     PLIKUzytkownicy.open("Uzytkownicy.txt",ios::out);
     int vectorSize = uzytkownicy.size();
-    //cout <<"vectorSize->"<< uzytkownicy.size()<<endl;
     for(int i=0; i<vectorSize; i++)
     {
         PLIKUzytkownicy << uzytkownicy[i].id << "|";
@@ -197,27 +199,20 @@ void odczytanieUzytkownikow(vector <Uzytkownik> & uzytkownicy)
                 {
                 case 0:
                     uzytkownicy.push_back(Uzytkownik());
-                    //cout << "j ->"<< j <<endl;
                     tymczasowyString = odczytaneLinieZPliku.substr(polozeniePoprzedniegoZnaku, i-polozeniePoprzedniegoZnaku);
-                    //cout << "tymczasowyString ->"<< tymczasowyString <<endl;
                     uzytkownicy[j].id =  atoi(tymczasowyString.c_str());
-                    //cout << "uzytkownicy[j].id ->"<< uzytkownicy[j].id <<endl;
                     polozeniePoprzedniegoZnaku = i+1;
                     sektorDanych++;
                     break;
                 case 1:
                     tymczasowyString = odczytaneLinieZPliku.substr(polozeniePoprzedniegoZnaku, i-polozeniePoprzedniegoZnaku);
                     uzytkownicy[j].login = tymczasowyString;
-                    //cout << "tymczasowyString ->"<< tymczasowyString <<endl;
-                    //cout << "uzytkownicy[j].login ->"<< uzytkownicy[j].login <<endl;
                     polozeniePoprzedniegoZnaku = i+1;
                     sektorDanych++;
                     break;
                 case 2:
                     tymczasowyString = odczytaneLinieZPliku.substr(polozeniePoprzedniegoZnaku, i-polozeniePoprzedniegoZnaku);
                     uzytkownicy[j].haslo = tymczasowyString;
-                    //cout << "tymczasowyString ->"<< tymczasowyString <<endl;
-                    //cout << "uzytkownicy[j].haslo ->"<< uzytkownicy[j].haslo <<endl;
                     polozeniePoprzedniegoZnaku = i+1;
                     sektorDanych++;
                     j++;
@@ -235,10 +230,11 @@ void menuGlowne (vector <Uzytkownik> & uzytkownicy, int numerUzytkownika)
 {
     vector <Adresat> adresaci;
     odczytywanieDanychZPliku(adresaci, numerUzytkownika);
+    int IDDoUsuniecia = 0;
 
     while (1)
     {
-        //system("cls");
+        system("cls");
         cout << "Menu glowne." << endl;
         cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"<<endl;
         cout << "1. Rejestracja nowej osoby." << endl;
@@ -256,7 +252,7 @@ void menuGlowne (vector <Uzytkownik> & uzytkownicy, int numerUzytkownika)
         {
         case '1':
             dodajAdresata(adresaci);
-            zapisDoPliku(adresaci,numerUzytkownika);
+            zapisDoPliku(adresaci,numerUzytkownika,IDDoUsuniecia);
             system("pause");
             break;
         case '2':
@@ -269,17 +265,16 @@ void menuGlowne (vector <Uzytkownik> & uzytkownicy, int numerUzytkownika)
             break;
         case '4':
             wyswietlWszystkieKontakty(adresaci);
-             system("pause");
+            system("pause");
             break;
-
         case '5':
-            usunAdresata(adresaci);                                         //coś dziwnego dodaje po zapisie do Ksiazki Adresowej
-            zapisDoPliku(adresaci,numerUzytkownika);
+            IDDoUsuniecia = usunAdresata(adresaci);
+            zapisDoPliku(adresaci,numerUzytkownika,IDDoUsuniecia);
             system("pause");
             break;
         case '6':
             edytujAdresata(adresaci);
-            zapisDoPliku(adresaci,numerUzytkownika);
+            zapisDoPliku(adresaci,numerUzytkownika,IDDoUsuniecia);
             system("pause");
             break;
         case '7':
@@ -317,7 +312,6 @@ char wczytajZnakZPodmenu()
     return znak;
 }
 
-
 void odczytywanieDanychZPliku(vector <Adresat> & adresaci,int numerUzytkownika)
 {
     PLIKAdresaci.open("Ksiazka Adresowa.txt",ios::in);
@@ -326,119 +320,154 @@ void odczytywanieDanychZPliku(vector <Adresat> & adresaci,int numerUzytkownika)
         cout << "Nie odnaleziono bazy danych. Tworzenie nowego pliku" << endl;
         PLIKAdresaci.open("Ksiazka Adresowa.txt",ios::out);
         PLIKAdresaci.close();
-
     }
     string odczytaneLinieZPliku;
     int dlugoscLinii = 0;
     int j = 0;
     while(getline(PLIKAdresaci,odczytaneLinieZPliku))
     {
-
         dlugoscLinii = odczytaneLinieZPliku.length();
         int sektorDanych = 0;
         int polozeniePoprzedniegoZnaku = 0;
-
         string tymczasowyString = "";
+        int IDUzytkownika = 0;
+        string tymczasowyStringID = "";
         for (int i=0; i<=dlugoscLinii; i++)
         {
             if (odczytaneLinieZPliku[i] == '|')
             {
-
                 switch(sektorDanych)
                 {
-
                 case 0:
-                    adresaci.push_back(Adresat());
-                    cout << "j ->"<< j <<endl;
-                    tymczasowyString = odczytaneLinieZPliku.substr(polozeniePoprzedniegoZnaku, i-polozeniePoprzedniegoZnaku);
-                    cout << "tymczasowyString ->"<< tymczasowyString <<endl;
-                    adresaci[j].id =  atoi(tymczasowyString.c_str());
-                    cout << "adresaci[j].id ->"<< adresaci[j].id <<endl;
+                    tymczasowyStringID = odczytaneLinieZPliku.substr(polozeniePoprzedniegoZnaku, i-polozeniePoprzedniegoZnaku);
                     polozeniePoprzedniegoZnaku = i+1;
                     sektorDanych++;
                     break;
-                case 1:  //wymaga sprawdzenia czy dany adresat powinien zostac wczytany dla danego uzytkownika
-                    //tymczasowyString = odczytaneLinieZPliku.substr(polozeniePoprzedniegoZnaku, i-polozeniePoprzedniegoZnaku);
-                    //uzytkownicy[numerUzytkownika].id =  atoi(tymczasowyString.c_str());
+                case 1:
+                    tymczasowyString = odczytaneLinieZPliku.substr(polozeniePoprzedniegoZnaku, i-polozeniePoprzedniegoZnaku);
+                    IDUzytkownika = atoi(tymczasowyString.c_str());
+                    if (IDUzytkownika != (int) numerUzytkownika)
+                    {
+                        i = dlugoscLinii;
+                        sektorDanych = 6;
+                        break;
+                    }
+                    adresaci.push_back(Adresat());
+                    adresaci[j].id =  atoi(tymczasowyStringID.c_str());
                     polozeniePoprzedniegoZnaku = i+1;
                     sektorDanych++;
-                   break;
+                    break;
                 case 2:
                     tymczasowyString = odczytaneLinieZPliku.substr(polozeniePoprzedniegoZnaku, i-polozeniePoprzedniegoZnaku);
                     adresaci[j].imie = tymczasowyString;
-                    cout << "tymczasowyString ->"<< tymczasowyString <<endl;
-                    cout << "adresaci[j].imie ->"<< adresaci[j].imie <<endl;
                     polozeniePoprzedniegoZnaku = i+1;
                     sektorDanych++;
                     break;
                 case 3:
                     tymczasowyString = odczytaneLinieZPliku.substr(polozeniePoprzedniegoZnaku, i-polozeniePoprzedniegoZnaku);
                     adresaci[j].nazwisko = tymczasowyString;
-                    cout << "tymczasowyString ->"<< tymczasowyString <<endl;
-                    cout << "adresaci[j].nazwisko ->"<< adresaci[j].nazwisko <<endl;
                     polozeniePoprzedniegoZnaku = i+1;
                     sektorDanych++;
                     break;
                 case 4:
                     tymczasowyString = odczytaneLinieZPliku.substr(polozeniePoprzedniegoZnaku, i-polozeniePoprzedniegoZnaku);
                     adresaci[j].numerTelefonu = tymczasowyString;
-                    cout << "tymczasowyString ->"<< tymczasowyString <<endl;
-                    cout << "adresaci[j].numerTelefonu ->"<< adresaci[j].numerTelefonu <<endl;
                     polozeniePoprzedniegoZnaku = i+1;
                     sektorDanych++;
                     break;
                 case 5:
                     tymczasowyString = odczytaneLinieZPliku.substr(polozeniePoprzedniegoZnaku, i-polozeniePoprzedniegoZnaku);
                     adresaci[j].email = tymczasowyString;
-                    cout << "tymczasowyString ->"<< tymczasowyString <<endl;
-                    cout << "adresaci[j].email ->"<< adresaci[j].email <<endl;
                     polozeniePoprzedniegoZnaku = i+1;
                     sektorDanych++;
                     break;
                 case 6:
                     tymczasowyString = odczytaneLinieZPliku.substr(polozeniePoprzedniegoZnaku, i-polozeniePoprzedniegoZnaku);
                     adresaci[j].adres = tymczasowyString;
-                    cout << "tymczasowyString ->"<< tymczasowyString <<endl;
-                    cout << "adresaci[j].adres ->"<< adresaci[j].adres <<endl;
                     polozeniePoprzedniegoZnaku = i+1;
                     sektorDanych++;
                     j++;
                     break;
                 }
-
             }
+        }
+    }
+    PLIKAdresaci.close();
+}
+
+void zapisDoPliku (vector <Adresat> & adresaci,int numerUzytkownika, int IDDoUsuniecia)
+{
+    PLIKAdresacitymczasowy.open("Ksiazka Adresowa tymczasowy.txt",ios::out);
+    PLIKAdresaci.open("Ksiazka Adresowa.txt",ios::in);
+    string odczytaneLinieZPliku;
+    int dlugoscLinii = 0;
+    int tymczasowyStringIntID = 0;
+    int i = 0;
+    while(getline(PLIKAdresaci,odczytaneLinieZPliku))
+    {
+        dlugoscLinii = odczytaneLinieZPliku.length();
+        int sektorDanych = 0;
+        int polozeniePoprzedniegoZnaku = 0;
+        string tymczasowyStringID = "";
+        for (int j=0; j<=dlugoscLinii; j++)
+        {
+            if (odczytaneLinieZPliku[j] == '|')
+            {
+                switch(sektorDanych)
+                {
+                case 0:
+                    tymczasowyStringID = odczytaneLinieZPliku.substr(polozeniePoprzedniegoZnaku, j-polozeniePoprzedniegoZnaku);
+                    tymczasowyStringIntID = atoi(tymczasowyStringID.c_str());
+                    polozeniePoprzedniegoZnaku = j+1;
+                    j = dlugoscLinii;
+                    break;
+                }
+            }
+        }
+        if (tymczasowyStringIntID == adresaci[i].id)
+        {
+            PLIKAdresacitymczasowy << adresaci[i].id << "|";
+            PLIKAdresacitymczasowy << numerUzytkownika << "|";
+            PLIKAdresacitymczasowy << adresaci[i].imie << "|";
+            PLIKAdresacitymczasowy << adresaci[i].nazwisko << "|";
+            PLIKAdresacitymczasowy << adresaci[i].numerTelefonu << "|";
+            PLIKAdresacitymczasowy << adresaci[i].email << "|";
+            PLIKAdresacitymczasowy << adresaci[i].adres << "|" << endl;
+            i++;
+        }
+        else if (tymczasowyStringIntID == IDDoUsuniecia)
+        {
+            continue;
+        }
+        else
+        {
+            PLIKAdresacitymczasowy << odczytaneLinieZPliku << endl;
         }
 
     }
+    int vectorSize = adresaci.size();
+    if (i<vectorSize)
+    {
+        PLIKAdresacitymczasowy << adresaci[i].id << "|";
+        PLIKAdresacitymczasowy << numerUzytkownika << "|";
+        PLIKAdresacitymczasowy << adresaci[i].imie << "|";
+        PLIKAdresacitymczasowy << adresaci[i].nazwisko << "|";
+        PLIKAdresacitymczasowy << adresaci[i].numerTelefonu << "|";
+        PLIKAdresacitymczasowy << adresaci[i].email << "|";
+        PLIKAdresacitymczasowy << adresaci[i].adres << "|" << endl;
+    }
+    PLIKAdresacitymczasowy.close();
     PLIKAdresaci.close();
+    remove("Ksiazka Adresowa.txt");
+    rename("Ksiazka Adresowa tymczasowy.txt","Ksiazka Adresowa.txt");
 }
 
-void zapisDoPliku (vector <Adresat> & adresaci,int numerUzytkownika)
-{
-    PLIKAdresaci.open("Ksiazka Adresowa.txt",ios::out);
-    int vectorSize = adresaci.size();
-    for(int i=0; i<vectorSize; i++)
-    {
-        PLIKAdresaci<< adresaci[i].id << "|";
-        PLIKAdresaci<< numerUzytkownika << "|";
-        PLIKAdresaci<< adresaci[i].imie << "|";
-        PLIKAdresaci<< adresaci[i].nazwisko << "|";
-        PLIKAdresaci<< adresaci[i].numerTelefonu << "|";
-        PLIKAdresaci<< adresaci[i].email << "|";
-        PLIKAdresaci<< adresaci[i].adres << "|" << endl;
-    }
-    PLIKAdresaci.close();
-}
 
 void dodajAdresata(vector <Adresat> & adresaci)
 {
     int wielkoscWektora = adresaci.size();
-    int najwyzszyNumerID = 1;
-    if (wielkoscWektora != 0)
-    {
-        najwyzszyNumerID = adresaci.back().id;
-        najwyzszyNumerID++;
-    }
+    int najwyzszyNumerID = wyliczenieNajwyzszegoNumeruID(adresaci);
+    najwyzszyNumerID++;
     adresaci.push_back(Adresat());
     adresaci[wielkoscWektora].id = najwyzszyNumerID;
     string tymczasowyString ="";
@@ -457,6 +486,41 @@ void dodajAdresata(vector <Adresat> & adresaci)
     cout << "Podaj adres nowego kontaktu:";
     tymczasowyString = wczytajLinie();
     adresaci[wielkoscWektora].adres = tymczasowyString;
+    cout << "Zarejestrowano nowy kontakt:";
+    system("pause");
+}
+
+int wyliczenieNajwyzszegoNumeruID (vector <Adresat> & adresaci)
+{
+    int tymczasowyStringInt = 0;
+    PLIKAdresaci.open("Ksiazka Adresowa.txt",ios::in);
+    string odczytaneLinieZPliku;
+    int dlugoscLinii = 0;
+    while(getline(PLIKAdresaci,odczytaneLinieZPliku))
+    {
+        dlugoscLinii = odczytaneLinieZPliku.length();
+        int sektorDanych = 0;
+        int polozeniePoprzedniegoZnaku = 0;
+        string tymczasowyStringID = "";
+        for (int i=0; i<=dlugoscLinii; i++)
+        {
+            if (odczytaneLinieZPliku[i] == '|')
+            {
+                switch(sektorDanych)
+                {
+                case 0:
+                    tymczasowyStringID = odczytaneLinieZPliku.substr(polozeniePoprzedniegoZnaku, i-polozeniePoprzedniegoZnaku);
+                    tymczasowyStringInt = atoi(tymczasowyStringID.c_str());
+                    polozeniePoprzedniegoZnaku = i+1;
+                    i = dlugoscLinii;
+                    break;
+                }
+
+            }
+        }
+    }
+    PLIKAdresaci.close();
+    return tymczasowyStringInt;
 }
 
 string wczytajLinie()
@@ -466,7 +530,6 @@ string wczytajLinie()
     getline (cin, wejscie);
     return wejscie;
 }
-
 
 void wyszukajAdresataPoImieniu (vector <Adresat> & adresaci)
 {
@@ -484,7 +547,6 @@ void wyszukajAdresataPoImieniu (vector <Adresat> & adresaci)
             cout <<adresaci[i].id << " "<< adresaci[i].imie << " " << adresaci[i].nazwisko << " " << adresaci[i].numerTelefonu << " " << adresaci[i].email << " " << adresaci[i].adres << endl;
             czyZnalezionoPrzynajmniejJednoImie = 1;
         }
-
     }
     cout << endl;
     if (czyZnalezionoPrzynajmniejJednoImie == 0)
@@ -508,7 +570,6 @@ void wyszukajAdresataPoNazwisku(vector <Adresat> & adresaci)
             cout <<adresaci[i].id << " "<< adresaci[i].imie << " " << adresaci[i].nazwisko << " " << adresaci[i].numerTelefonu << " " << adresaci[i].email << " " << adresaci[i].adres << endl;
             czyZnalezionoPrzynajmniejJednoImie = 1;
         }
-
     }
     cout << endl;
     if (czyZnalezionoPrzynajmniejJednoImie == 0)
@@ -527,29 +588,27 @@ void wyswietlWszystkieKontakty(vector <Adresat> & adresaci)
     cout << endl;
 }
 
-void usunAdresata (vector <Adresat> & adresaci)
+int usunAdresata (vector <Adresat> & adresaci) // nie usuwa adresata bo zapisuje dane przechowywane w pliku tymczasowym
 {
-
     char takLubNie;
     int komorkaAdresataDoUsuniecia;
+    int kontaktDoUsuniecia;
     komorkaAdresataDoUsuniecia = sprawdzCzyIDIstnieje(adresaci);
-
     while (1)
     {
-        cout << "Czy na pewno chcesz usunac uzytkownika " << adresaci[komorkaAdresataDoUsuniecia].imie << " " << adresaci[komorkaAdresataDoUsuniecia].nazwisko << "?" << endl;
+        cout << "Czy na pewno chcesz usunac kontakt " << adresaci[komorkaAdresataDoUsuniecia].imie << " " << adresaci[komorkaAdresataDoUsuniecia].nazwisko << "?" << endl;
         cout << "Wybierz z klawiatury y w celu potwierdzenia lub n w celu anulowania." << endl;
         cin >> takLubNie;
         if ((takLubNie == 'y') || (takLubNie == 'Y'))
-        {
+        {   kontaktDoUsuniecia = adresaci[komorkaAdresataDoUsuniecia].id;
             adresaci.erase(adresaci.begin()+komorkaAdresataDoUsuniecia);
-            break;
+            return kontaktDoUsuniecia;
         }
         else if ((takLubNie == 'n') || (takLubNie == 'N'))
         {
             break;
         }
     }
-
 }
 
 int sprawdzCzyIDIstnieje(vector <Adresat> & adresaci)
@@ -559,7 +618,7 @@ int sprawdzCzyIDIstnieje(vector <Adresat> & adresaci)
     while (1)
     {
         bool czyZnalezionoNumerID = 0;
-        cout << "Podaj id uzytkownika: " << endl;
+        cout << "Podaj id kontaktu: " << endl;
         cin >> idAdresataDoUsuniecia;
         int vectorSize = adresaci.size();
         for (int i=0; i<vectorSize; i++)
@@ -579,7 +638,6 @@ int sprawdzCzyIDIstnieje(vector <Adresat> & adresaci)
             break;
         }
     }
-
     return komorkaAdresataDoUsuniecia;
 }
 
